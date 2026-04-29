@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Preços & Comissão</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">💰</span>
+      <span class="logo-text">PrecificaPro</span>
+    </div>
+    <nav class="nav">
+      <button class="nav-btn active" data-tab="calc" onclick="showTab('calc', this)">
+        <span class="nav-icon">📊</span> Calculadora
+      </button>
+      <button class="nav-btn" data-tab="multi" onclick="showTab('multi', this)">
+        <span class="nav-icon">📦</span> Múltiplos Produtos
+      </button>
+      <button class="nav-btn" data-tab="comm" onclick="showTab('comm', this)">
+        <span class="nav-icon">🤝</span> Comissão
+      </button>
+      <button class="nav-btn" data-tab="hist" onclick="showTab('hist', this)">
+        <span class="nav-icon">🕒</span> Histórico
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="server-status">
+        <span class="dot" id="status-dot"></span>
+        <span id="status-text">Conectando...</span>
+      </div>
+    </div>
+  </div>
+
+  <main class="main">
+
+    <!-- ── CALCULADORA ─────────────────────────────── -->
+    <section class="tab-panel active" id="tab-calc">
+      <div class="page-header">
+        <h1>Calculadora de Preço</h1>
+        <p>Calcule o preço de venda com markup, margem, impostos e descontos.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Dados do Produto</div>
+          <div class="field-row">
+            <div class="field">
+              <label>Custo do produto (R$)</label>
+              <input type="number" id="c_custo" value="100" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label>Tipo de cálculo</label>
+              <select id="c_tipo">
+                <option value="markup" selected>Markup — % sobre o custo</option>
+                <option value="margem">Margem — % sobre a venda</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:16px">
+            <label>Porcentagem <span id="c_pct_display" class="pct-badge">50%</span></label>
+            <div class="slider-wrap">
+              <input type="range" id="c_pct_sl" min="0" max="300" step="0.5" value="50" />
+              <input type="number" id="c_pct_n" value="50" min="0" max="300" step="0.1" class="sl-input" />
+              <span class="sl-unit">%</span>
+            </div>
+          </div>
+
+          <div class="field-row" style="margin-top:16px">
+            <div class="field">
+              <label>Desconto (%)</label>
+              <input type="number" id="c_desc" value="0" min="0" max="100" step="0.1" />
+            </div>
+            <div class="field">
+              <label>Impostos / taxas (%)</label>
+              <input type="number" id="c_imp" value="0" min="0" step="0.1" />
+            </div>
+          </div>
+
+          <button class="btn-primary" onclick="calcular()" style="margin-top:20px;width:100%">
+            Calcular preço
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Resultado</div>
+          <div class="breakdown" id="breakdown">
+            <div class="bk-row"><span>Custo do produto</span><span id="b_custo" class="mono">R$ –</span></div>
+            <div class="bk-row"><span>Markup / margem</span><span id="b_mk" class="mono green">–</span></div>
+            <div class="bk-row"><span>Impostos / taxas</span><span id="b_imp" class="mono green">–</span></div>
+            <div class="bk-row"><span>Desconto</span><span id="b_desc" class="mono red">–</span></div>
+            <div class="bk-row total"><span>Preço final de venda</span><span id="b_total" class="mono">–</span></div>
+          </div>
+
+          <div class="result-hero" id="result-hero">
+            <div>
+              <div class="rh-label">Preço final de venda</div>
+              <div class="rh-sub" id="rh-sub">Preencha os campos e clique em Calcular</div>
+            </div>
+            <div class="rh-val" id="rh-val">R$ –</div>
+          </div>
+
+          <div class="metrics-row">
+            <div class="metric"><div class="met-lbl">Lucro bruto</div><div class="met-val green" id="m_luc">–</div></div>
+            <div class="metric"><div class="met-lbl">Margem real</div><div class="met-val amber" id="m_mg">–</div></div>
+            <div class="metric"><div class="met-lbl">Markup real</div><div class="met-val blue" id="m_mk">–</div></div>
+            <div class="metric"><div class="met-lbl">Sem desconto</div><div class="met-val" id="m_sd">–</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── MÚLTIPLOS PRODUTOS ──────────────────────── -->
+    <section class="tab-panel" id="tab-multi">
+      <div class="page-header">
+        <h1>Múltiplos Produtos</h1>
+        <p>Calcule o preço e lucro de vários produtos ao mesmo tempo.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Lista de Produtos</div>
+        <div class="prod-header">
+          <span>Nome</span><span>Custo (R$)</span><span>Markup (%)</span><span>Qtd</span><span></span>
+        </div>
+        <div id="prod-list"></div>
+        <div style="margin-top:14px;display:flex;gap:10px">
+          <button class="btn-ghost" onclick="addProd()">＋ Adicionar produto</button>
+          <button class="btn-primary" onclick="calcularLote()">Calcular todos</button>
+        </div>
+      </div>
+
+      <div class="card" id="multi-result" style="display:none">
+        <div class="card-title">Resultado do Lote</div>
+        <div class="table-wrap">
+          <table id="multi-table">
+            <thead>
+              <tr>
+                <th>Produto</th><th>Custo</th><th>Markup</th>
+                <th>Preço Venda</th><th>Qtd</th><th>Lucro</th><th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="multi-tbody"></tbody>
+          </table>
+        </div>
+        <div class="summary-bar" id="summary-bar"></div>
+      </div>
+    </section>
+
+    <!-- ── COMISSÃO ────────────────────────────────── -->
+    <section class="tab-panel" id="tab-comm">
+      <div class="page-header">
+        <h1>Comissão de Vendedores</h1>
+        <p>Cadastre vendedores e calcule comissões automaticamente.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Parâmetros da Venda</div>
+          <div class="field">
+            <label>Valor da venda (R$)</label>
+            <input type="number" id="v_venda" value="1000" min="0" />
+          </div>
+          <div class="field" style="margin-top:14px">
+            <label>Taxa de comissão <span id="v_taxa_display" class="pct-badge">5%</span></label>
+            <div class="slider-wrap">
+              <input type="range" id="v_sl" min="0" max="30" step="0.5" value="5" />
+              <input type="number" id="v_n" value="5" min="0" max="100" step="0.1" class="sl-input" />
+              <span class="sl-unit">%</span>
+            </div>
+          </div>
+          <div class="field" style="margin-top:14px">
+            <label>Comissão calculada sobre</label>
+            <select id="v_base">
+              <option value="bruto">Valor bruto da venda</option>
+              <option value="lucro">Lucro líquido</option>
+            </select>
+          </div>
+          <div class="field" style="margin-top:14px">
+            <label>Custo do produto (R$)</label>
+            <input type="number" id="v_custo" value="600" min="0" />
+          </div>
+          <button class="btn-primary" onclick="calcularComissao()" style="margin-top:18px;width:100%">
+            Calcular comissão
+          </button>
+
+          <div class="comm-boxes" id="comm-boxes" style="margin-top:16px;display:none">
+            <div class="comm-box earn">
+              <div class="cb-lbl">Comissão devida</div>
+              <div class="cb-val" id="c_earn">R$ –</div>
+            </div>
+            <div class="comm-box keep">
+              <div class="cb-lbl">Empresa recebe</div>
+              <div class="cb-val" id="c_keep">R$ –</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Cadastrar Vendedor</div>
+          <div class="field">
+            <label>Nome completo</label>
+            <input type="text" id="s_nome" placeholder="Ex: Ana Ribeiro" />
+          </div>
+          <div class="field" style="margin-top:12px">
+            <label>Comissão padrão (%)</label>
+            <input type="number" id="s_pct" value="5" min="0" max="100" step="0.1" />
+          </div>
+          <div class="field" style="margin-top:12px">
+            <label>Nível</label>
+            <select id="s_nivel">
+              <option>Júnior</option>
+              <option selected>Pleno</option>
+              <option>Sênior</option>
+            </select>
+          </div>
+          <button class="btn-primary" onclick="addVendedor()" style="margin-top:18px;width:100%">
+            Adicionar vendedor
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Equipe de Vendas</div>
+        <div id="sellers-list"><div class="empty-state">Nenhum vendedor cadastrado ainda.</div></div>
+      </div>
+    </section>
+
+    <!-- ── HISTÓRICO ───────────────────────────────── -->
+    <section class="tab-panel" id="tab-hist">
+      <div class="page-header">
+        <h1>Histórico de Cálculos</h1>
+        <p>Últimos 20 cálculos realizados nesta sessão.</p>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="card-title" style="margin:0">Registros</div>
+          <button class="btn-ghost btn-sm" onclick="limparHistorico()">Limpar histórico</button>
+        </div>
+        <div id="historico-list"><div class="empty-state">Nenhum cálculo realizado ainda.</div></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
